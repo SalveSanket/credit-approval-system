@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports: ["5432:5432"]
+    volumes: [dbdata:/var/lib/postgresql/data]
+
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    env_file: [.env.example]
+    depends_on: [db, redis]
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    ports: ["8000:8000"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/worker.Dockerfile
+    env_file: [.env.example]
+    depends_on: [db, redis]
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+
+  beat:
+    build:
+      context: .
+      dockerfile: docker/worker.Dockerfile
+    env_file: [.env.example]
+    depends_on: [db, redis]
+    command: ["celery","-A","credit_core","beat","--loglevel=INFO"]
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+
+volumes:
+  dbdata:
