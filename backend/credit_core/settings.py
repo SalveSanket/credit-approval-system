@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'customers',
     'loans',
     'ingestion',
+    'common',
 ]
 
 MIDDLEWARE = [
